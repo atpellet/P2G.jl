@@ -1,0 +1,13 @@
+name = "P2G"
+uuid = "a94183d0-447f-4178-8325-710b222b062c"
+authors = ["Alexandre Pellet <atpellet.pro@proton.me> and contributors"]
+version = "1.0.0-DEV"
+
+[compat]
+julia = "1.6.7"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]
