@@ -1,10 +1,16 @@
 module P2G
 
-# Write your package code here.
+# --- external packages ---
+using PlotlyJS
 
+# --- internal packages ---
 include("sampling.jl")
+include("interpolation.jl")
+
+# --- Exports ---
 
 
+# --- functions ---
 
 
 
