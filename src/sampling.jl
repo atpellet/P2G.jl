@@ -65,7 +65,7 @@ function createGrid(xmin, xmax, ymin, ymax, dX)
         println("                           dx = ", dx)
         println("                           dy = ", dy)
     end
-    return Grid(xmin, xmax, ymin, xmax, Nx, Ny, dx, dy)
+    return Grid(xmin, xmax, ymin, ymax, Nx, Ny, dx, dy)
 end
 
 function createParticleSet end
