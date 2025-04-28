@@ -1,14 +1,20 @@
 # --- Exports ---
-export createParticleSet
+export createParticleSet, createGrid
 export Grid, Particles, Sample
 export plotSample
 
 
 # --- Structures ---
 
-struct GridCoordinates
-    x
-    y
+struct Grid
+    xmin
+    xmax
+    ymin
+    ymax
+    Nx
+    Ny
+    dx
+    dy
 end
 
 mutable struct Particles
@@ -17,7 +23,7 @@ mutable struct Particles
 end
 
 struct Sample
-    grid::GridCoordinates
+    grid::Grid
     particles::Particles
 end
 
@@ -47,8 +53,7 @@ function sampleInCell!(refparticles::Base.RefValue{Particles}, xm, ym, dx, dy)
     end
 end
 
-
-function createParticleSet(xmin, xmax, ymin, ymax, dX)
+function createGrid(xmin, xmax, ymin, ymax, dX)
     # adapting dx and dy to get uniform cell sizes 
     Nx = div((xmax-xmin), dX, RoundUp)
     Ny = div((ymax-ymin), dX, RoundUp)
@@ -60,16 +65,18 @@ function createParticleSet(xmin, xmax, ymin, ymax, dX)
         println("                           dx = ", dx)
         println("                           dy = ", dy)
     end
-    # create the grid
-    grid = Grid(collect(xmin:dx:xmax), collect(ymin:dy:ymax))
+    return Grid(xmin, xmax, ymin, xmax, Nx, Ny, dx, dy)
+end
+
+function createParticleSet end
+
+function createParticleSet(grid::Grid)
     particles = initialiseParticles()
     # sample the particles onto the grid
     #sampleInCell!.(Ref(particles), grid.x[1:end-1], grid.y[1:end-1], Ref(dx), Ref(dy), Ref(ppc))
-    for i in 1:Nx
-        for j in 1:Ny
-            println("(i,j) = (", i, ",", j, ")")
-            println("grid (x,y) = (", grid.x[i], ",", grid.y[j], ")")
-            sampleInCell!(Ref(particles), grid.x[i], grid.y[j], dx, dy)
+    for i in 0:grid.Nx-1
+        for j in 0:grid.Ny-1
+            sampleInCell!(Ref(particles), grid.xmin+i*grid.dx, grid.ymin+j*grid.dy, grid.dx, grid.dy)
         end
     end    
     # end
@@ -77,31 +84,36 @@ function createParticleSet(xmin, xmax, ymin, ymax, dX)
     return Sample(grid, particles)
 end
 
+function createParticleSet(xmin, xmax, ymin, ymax, dX)
+    # create the grid
+    grid = createGrid(xmin, xmax, ymin, ymax, dX)
+    createParticleSet(grid)
+end
+
 
 
 # Traces
 
 function traceSampleParticles(particles::Particles)
-    trace = scatter(x=particles.x, y=particles.y, mode=:markers, marker_color=:blue, showlegend=false)
+    trace = scatter(x=particles.x, y=particles.y,
+                    mode=:markers,
+                    marker_color=:blue,
+                    showlegend=false)
     return trace
 end
 
 
-function traceSampleGrid(grid::GridCoordinates)
+function traceSampleGrid(grid::Grid)
     traces = []
     traces = convert(Vector{typeof(scatter())}, traces)
-    xmin = minimum(grid.x)
-    xmax = maximum(grid.x)
-    ymin = minimum(grid.y)
-    ymax = maximum(grid.y)
-    for i in 1:length(grid.x)
-        xpos = grid.x[i]
-        trace = scatter(x=[xpos, xpos], y=[ymin, ymax])
+    for i in 0:grid.Nx
+        xpos = grid.xmin+i * grid.dx
+        trace = scatter(x=[xpos, xpos], y=[grid.ymin, grid.ymax])
         append!(traces, [trace])
     end
-    for i in 1:length(grid.y)
-        ypos = grid.y[i]
-        trace = scatter(x=[xmin, xmax], y=[ypos, ypos])
+    for j in 0:grid.Ny
+        ypos = grid.ymin + j * grid.dy
+        trace = scatter(x=[grid.xmin, grid.xmax], y=[ypos, ypos])
         append!(traces, [trace])
     end
     for trace in traces
@@ -121,13 +133,14 @@ function plotSample end
 function plotSample(;traceGrid::Union{Vector{typeof(scatter())}, Nothing}=nothing, traceParticles::Union{typeof(scatter()),Nothing}=nothing) 
     traces = []
     traces = convert(Vector{typeof(scatter())}, traces)
-    if traceGrid !isnothing
+    if traceGrid != nothing
         append!(traces, traceGrid)
     end
-    if traceParticles !isnothing
+    if traceParticles != nothing
         append!(traces, [traceParticles])
     end
-    plot(traces)
+    layout = Layout(yaxis_scaleanchor="x")
+    plot(traces, layout)
 end 
 
 function plotSample(sampleSet::Sample)
@@ -136,7 +149,7 @@ function plotSample(sampleSet::Sample)
     plotSample(;traceGrid=tGrid, traceParticles=tParticles)
 end
 
-plotSample(grid::GridCoordinates) = plotSample(;traceGrid=traceSampleGrid(grid))
+plotSample(grid::Grid) = plotSample(;traceGrid=traceSampleGrid(grid))
 
 plotSample(particles::Particles) = plotSample(;traceParticles=traceSampleParticles(particles))
 

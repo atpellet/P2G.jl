@@ -1,14 +1,13 @@
 
 using P2G
-
 using PlotlyJS
 
 
-dummyset = createParticleSet(0, 2, 0, 5, 1)
+grid = createGrid(0, 2, 0, 2, 1)
 
-plotSample(dummyset)
-#=
-traceGrid=P2G.traceSampleGrid(dummyset.grid)
-trace = scatter(x=dummyset.grid.x, y=dummyset.grid.y, marker_color=:red, mode=:markers, marker_size=10)
-plot(vcat(traceGrid, trace))
-=#
+data = initialiseGridData(grid)
+
+traces_grid = P2G.traceSampleGrid(grid)
+trace_griddata = scatter(x=data.x, y=data.y, mode=:markers, marker_color=:red)
+layout = Layout(yaxis_scaleanchor=:x)
+plot(vcat(traces_grid, trace_griddata), layout)
