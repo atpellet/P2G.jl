@@ -3,9 +3,10 @@ module P2G
 # --- external packages ---
 using PlotlyJS
 using DataFrames
-using Printf
+using PlyIO
 
 # --- internal packages ---
+include("data_structures.jl")
 include("sampling.jl")
 include("interpolation.jl")
 

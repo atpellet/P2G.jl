@@ -1,34 +1,6 @@
 # --- Exports ---
 export createParticleSet, createGrid
-export Grid, Particles, Sample
 export plotSample
-
-
-# --- Structures ---
-
-struct Grid
-    xmin
-    xmax
-    ymin
-    ymax
-    Nx
-    Ny
-    dx
-    dy
-end
-
-mutable struct Particles
-    x
-    y
-end
-
-struct Sample
-    grid::Grid
-    particles::Particles
-end
-
-initialiseParticles() = Particles([], [])
-
 
 # --- Functions ---
 
@@ -53,24 +25,24 @@ function sampleInCell!(refparticles::Base.RefValue{Particles}, xm, ym, dx, dy)
     end
 end
 
-function createGrid(xmin, xmax, ymin, ymax, dX)
+function createGrid(xmin, xmax, ymin, ymax, dX; verbose::Bool=false)
     # adapting dx and dy to get uniform cell sizes 
     Nx = div((xmax-xmin), dX, RoundUp)
     Ny = div((ymax-ymin), dX, RoundUp)
     dx = (xmax-xmin)/Nx
     dy = (ymax-ymin)/Ny
-    if dx != dX || dy != dX 
+    if (dx != dX || dy != dX) && verbose
         println("Cell size adapted to match sample dimensions with uniform grid")
         println("New cell dimensions are :")
         println("                           dx = ", dx)
         println("                           dy = ", dy)
     end
-    return Grid(xmin, xmax, ymin, ymax, Nx, Ny, dx, dy)
+    return GridGeometry(xmin, xmax, ymin, ymax, Nx, Ny, dx, dy)
 end
 
 function createParticleSet end
 
-function createParticleSet(grid::Grid)
+function createParticleSet(grid::GridGeometry)
     particles = initialiseParticles()
     # sample the particles onto the grid
     #sampleInCell!.(Ref(particles), grid.x[1:end-1], grid.y[1:end-1], Ref(dx), Ref(dy), Ref(ppc))
@@ -103,7 +75,7 @@ function traceSampleParticles(particles::Particles)
 end
 
 
-function traceSampleGrid(grid::Grid)
+function traceSampleGrid(grid::GridGeometry)
     traces = []
     traces = convert(Vector{typeof(scatter())}, traces)
     for i in 0:grid.Nx
@@ -149,7 +121,7 @@ function plotSample(sampleSet::Sample)
     plotSample(;traceGrid=tGrid, traceParticles=tParticles)
 end
 
-plotSample(grid::Grid) = plotSample(;traceGrid=traceSampleGrid(grid))
+plotSample(grid::GridGeometry) = plotSample(;traceGrid=traceSampleGrid(grid))
 
 plotSample(particles::Particles) = plotSample(;traceParticles=traceSampleParticles(particles))
 
